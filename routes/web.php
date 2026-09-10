@@ -7,7 +7,6 @@ use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ImportacionNinosController;
-use App\Http\Controllers\UserController;
 use App\Models\Nino;
 use App\Models\Grupo;
 use App\Models\Actividad;
@@ -58,14 +57,9 @@ Route::get('/directora', function () {
         ->orderBy('nombres')
         ->get();
 
-    $hoy = Carbon::now();
-
     $cumpleanosCercanos = Nino::with('grupo')
-        ->whereNotNull('fecha_nacimiento')
+        ->cumpleanosDelMes()
         ->get()
-        ->filter(function ($nino) use ($hoy) {
-            return Carbon::parse($nino->fecha_nacimiento)->month === $hoy->month;
-        })
         ->sortBy(function ($nino) {
             return Carbon::parse($nino->fecha_nacimiento)->day;
         })
@@ -112,14 +106,9 @@ Route::get('/admin', function () {
         ->get();
     $listaVulnerables = Nino::where('vulnerable', true)->get();
 
-    $hoy = Carbon::now();
-
     $cumpleanosCercanos = Nino::with('grupo')
-        ->whereNotNull('fecha_nacimiento')
+        ->cumpleanosDelMes()
         ->get()
-        ->filter(function ($nino) use ($hoy) {
-            return Carbon::parse($nino->fecha_nacimiento)->month === $hoy->month;
-        })
         ->sortBy(function ($nino) {
             return Carbon::parse($nino->fecha_nacimiento)->day;
         })
@@ -349,10 +338,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-/* 
+/*
 */
 
-
-Route::middleware(['auth', 'admin.directora'])->group(function () {
-    Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
-});
+/*
+| Ruta de usuarios pendiente: ver UserController.php y resources/views/usuarios/
+| (aún sin decidir si es solo listado o CRUD completo, no se comitea todavía).
+*/

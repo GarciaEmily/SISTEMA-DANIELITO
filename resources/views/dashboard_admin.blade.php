@@ -74,9 +74,11 @@
             ➕ Crear actividad
         </a>
 
-        <a href="{{ route('usuarios.index') }}" class="btn btn-secundario">
-            👤 Usuarios
-        </a>
+        @if(Route::has('usuarios.index'))
+            <a href="{{ route('usuarios.index') }}" class="btn btn-secundario">
+                👤 Usuarios
+            </a>
+        @endif
 
         @if(Route::has('asistencias.reporte'))
             <a href="{{ route('asistencias.reporte') }}" class="btn btn-secundario">

@@ -71,4 +71,10 @@ class Nino extends Model
     {
         return $this->hasMany(ActividadNino::class);
     }
+
+    public function scopeCumpleanosDelMes($query)
+    {
+        return $query->whereNotNull('fecha_nacimiento')
+            ->whereMonth('fecha_nacimiento', now()->month);
+    }
 }
