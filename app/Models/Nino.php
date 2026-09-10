@@ -64,7 +64,7 @@ class Nino extends Model
     }
     public function actividades()
 {
-    return $this->belongsToMany(Actividad::class, 'actividad_ninos', 'nino_id', 'actividad_id');
+    return $this->belongsToMany(Actividad::class, 'actividad_nino', 'nino_id', 'actividad_id');
 }
 
     public function actividadNinos(): HasMany

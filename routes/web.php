@@ -7,6 +7,7 @@ use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ImportacionNinosController;
+use App\Http\Controllers\UserController;
 use App\Models\Nino;
 use App\Models\Grupo;
 use App\Models\Actividad;
@@ -57,6 +58,19 @@ Route::get('/directora', function () {
         ->orderBy('nombres')
         ->get();
 
+    $hoy = Carbon::now();
+
+    $cumpleanosCercanos = Nino::with('grupo')
+        ->whereNotNull('fecha_nacimiento')
+        ->get()
+        ->filter(function ($nino) use ($hoy) {
+            return Carbon::parse($nino->fecha_nacimiento)->month === $hoy->month;
+        })
+        ->sortBy(function ($nino) {
+            return Carbon::parse($nino->fecha_nacimiento)->day;
+        })
+        ->values();
+
     return view('directora', [
         'totalNinos' => Nino::count(),
         'totalGrupos' => Grupo::count(),
@@ -64,6 +78,7 @@ Route::get('/directora', function () {
         'totalAsistencias' => $totalAsistencias,
         'ninosVulnerables' => Nino::where('vulnerable', true)->count(),
         'listaVulnerables' => $listaVulnerables,
+        'cumpleanosCercanos' => $cumpleanosCercanos,
         'presentes' => $presentes,
         'ausentes' => $ausentes,
         'justificados' => $justificados,
@@ -97,6 +112,19 @@ Route::get('/admin', function () {
         ->get();
     $listaVulnerables = Nino::where('vulnerable', true)->get();
 
+    $hoy = Carbon::now();
+
+    $cumpleanosCercanos = Nino::with('grupo')
+        ->whereNotNull('fecha_nacimiento')
+        ->get()
+        ->filter(function ($nino) use ($hoy) {
+            return Carbon::parse($nino->fecha_nacimiento)->month === $hoy->month;
+        })
+        ->sortBy(function ($nino) {
+            return Carbon::parse($nino->fecha_nacimiento)->day;
+        })
+        ->values();
+
     return view('admin', [
         'totalNinos' => Nino::count(),
         'totalGrupos' => Grupo::count(),
@@ -104,6 +132,7 @@ Route::get('/admin', function () {
         'totalAsistencias' => $totalAsistencias,
         'ninosVulnerables' => Nino::where('vulnerable', true)->count(),
         'listaVulnerables' => $listaVulnerables,
+        'cumpleanosCercanos' => $cumpleanosCercanos,
         'presentes' => $presentes,
         'ausentes' => $ausentes,
         'justificados' => $justificados,
@@ -294,9 +323,11 @@ Route::get('/reportes/asistencia-grupo/{grupo}', [ReporteController::class, 'asi
     ->name('reportes.asistencia.grupo');
 
 Route::get('/reportes/actividades/pdf', [ReporteController::class, 'exportarActividadesPdf'])
+    ->middleware(['auth', 'admin.directora'])
     ->name('reportes.actividades.pdf');
 
 Route::get('/reportes/asistencia-actividad/{actividad}', [ReporteController::class, 'exportarAsistenciaPorActividad'])
+    ->middleware(['auth', 'admin.directora'])
     ->name('reportes.asistencia_actividad.pdf');
 
 /*
@@ -320,6 +351,7 @@ Route::middleware('auth')->group(function () {
 });
 /* 
 */
+
 
 Route::middleware(['auth', 'admin.directora'])->group(function () {
     Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');

@@ -133,6 +133,10 @@
                                             📋 Ver
                                         </a>
 
+                                        <a href="{{ route('actividades.edit', $actividad->id) }}" class="btn-action btn-edit">
+                                            ✏️ Editar
+                                        </a>
+
                                         <form action="{{ route('actividades.destroy', $actividad->id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar esta actividad?')">
                                             @csrf
                                             @method('DELETE')
