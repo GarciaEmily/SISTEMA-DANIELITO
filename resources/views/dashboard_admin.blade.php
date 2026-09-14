@@ -74,7 +74,7 @@
             ➕ Crear actividad
         </a>
 
-        @if(Route::has('usuarios.index'))
+        @if(Route::has('usuarios.index') && auth()->user()->role->nombre === 'Directora')
             <a href="{{ route('usuarios.index') }}" class="btn btn-secundario">
                 👤 Usuarios
             </a>

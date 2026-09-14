@@ -46,6 +46,11 @@ class User extends Authenticatable
         return $this->hasMany(Nino::class, 'maestro_id');
     }
 
+    public function gruposComoMaestro(): HasMany
+    {
+        return $this->hasMany(Grupo::class, 'maestro_id');
+    }
+
     public function actividades(): HasMany
     {
         return $this->hasMany(Actividad::class, 'creado_por');
