@@ -57,6 +57,14 @@ Route::get('/directora', function () {
         ->orderBy('nombres')
         ->get();
 
+    $cumpleanosCercanos = Nino::with('grupo')
+        ->cumpleanosDelMes()
+        ->get()
+        ->sortBy(function ($nino) {
+            return Carbon::parse($nino->fecha_nacimiento)->day;
+        })
+        ->values();
+
     return view('directora', [
         'totalNinos' => Nino::count(),
         'totalGrupos' => Grupo::count(),
@@ -64,6 +72,7 @@ Route::get('/directora', function () {
         'totalAsistencias' => $totalAsistencias,
         'ninosVulnerables' => Nino::where('vulnerable', true)->count(),
         'listaVulnerables' => $listaVulnerables,
+        'cumpleanosCercanos' => $cumpleanosCercanos,
         'presentes' => $presentes,
         'ausentes' => $ausentes,
         'justificados' => $justificados,
@@ -97,6 +106,14 @@ Route::get('/admin', function () {
         ->get();
     $listaVulnerables = Nino::where('vulnerable', true)->get();
 
+    $cumpleanosCercanos = Nino::with('grupo')
+        ->cumpleanosDelMes()
+        ->get()
+        ->sortBy(function ($nino) {
+            return Carbon::parse($nino->fecha_nacimiento)->day;
+        })
+        ->values();
+
     return view('admin', [
         'totalNinos' => Nino::count(),
         'totalGrupos' => Grupo::count(),
@@ -104,6 +121,7 @@ Route::get('/admin', function () {
         'totalAsistencias' => $totalAsistencias,
         'ninosVulnerables' => Nino::where('vulnerable', true)->count(),
         'listaVulnerables' => $listaVulnerables,
+        'cumpleanosCercanos' => $cumpleanosCercanos,
         'presentes' => $presentes,
         'ausentes' => $ausentes,
         'justificados' => $justificados,
@@ -294,9 +312,11 @@ Route::get('/reportes/asistencia-grupo/{grupo}', [ReporteController::class, 'asi
     ->name('reportes.asistencia.grupo');
 
 Route::get('/reportes/actividades/pdf', [ReporteController::class, 'exportarActividadesPdf'])
+    ->middleware(['auth', 'admin.directora'])
     ->name('reportes.actividades.pdf');
 
 Route::get('/reportes/asistencia-actividad/{actividad}', [ReporteController::class, 'exportarAsistenciaPorActividad'])
+    ->middleware(['auth', 'admin.directora'])
     ->name('reportes.asistencia_actividad.pdf');
 
 /*
@@ -318,9 +338,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-/* 
+/*
 */
 
-Route::middleware(['auth', 'admin.directora'])->group(function () {
-    Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
-});
+/*
+| Ruta de usuarios pendiente: ver UserController.php y resources/views/usuarios/
+| (aún sin decidir si es solo listado o CRUD completo, no se comitea todavía).
+*/
