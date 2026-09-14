@@ -7,6 +7,7 @@ use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ImportacionNinosController;
+use App\Http\Controllers\UserController;
 use App\Models\Nino;
 use App\Models\Grupo;
 use App\Models\Actividad;
@@ -339,9 +340,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 /*
+|--------------------------------------------------------------------------
+| Rutas de usuarios (solo Directora)
+|--------------------------------------------------------------------------
 */
 
-/*
-| Ruta de usuarios pendiente: ver UserController.php y resources/views/usuarios/
-| (aún sin decidir si es solo listado o CRUD completo, no se comitea todavía).
-*/
+Route::middleware(['auth', 'role:Directora'])->group(function () {
+    Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
+    Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
+    Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
+    Route::get('/usuarios/{usuario}/edit', [UserController::class, 'edit'])->name('usuarios.edit');
+    Route::put('/usuarios/{usuario}', [UserController::class, 'update'])->name('usuarios.update');
+    Route::delete('/usuarios/{usuario}', [UserController::class, 'destroy'])->name('usuarios.destroy');
+});
