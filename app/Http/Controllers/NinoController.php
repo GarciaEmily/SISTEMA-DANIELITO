@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Grupo;
 use App\Models\Nino;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -63,7 +62,7 @@ class NinoController extends Controller
         ]);
 
         $grupo = Grupo::findOrFail($request->grupo_id);
-        $maestro = $this->obtenerMaestroPorGrupo($grupo->nombre);
+        $maestro = $grupo->maestro;
 
         if (!$maestro) {
             return back()->withErrors([
@@ -144,7 +143,7 @@ class NinoController extends Controller
         ]);
 
         $grupo = Grupo::findOrFail($request->grupo_id);
-        $maestro = $this->obtenerMaestroPorGrupo($grupo->nombre);
+        $maestro = $grupo->maestro;
 
         if (!$maestro) {
             return back()->withErrors([
@@ -191,32 +190,4 @@ class NinoController extends Controller
         return redirect()->route('ninos.index')->with('success', 'Niño eliminado correctamente.');
     }
 
-    private function obtenerMaestroPorGrupo($grupoNombre)
-{
-    return match ($grupoNombre) {
-
-        '6 a 8 años' =>
-            User::where('nombre', 'Ivi')
-                ->where('apellido', 'Condori')
-                ->first(),
-
-        '9 a 11 años' =>
-            User::where('nombre', 'Danna')
-                ->where('apellido', 'Garcia')
-                ->first(),
-
-        '12 a 14 años' =>
-            User::where('nombre', 'Diego')
-                ->where('apellido', 'Chore')
-                ->first(),
-
-        '15 a 18 años',
-        '18+' =>
-            User::where('nombre', 'Juan Carlos')
-                ->where('apellido', 'Contreras')
-                ->first(),
-
-        default => null,
-    };
-}
 }
