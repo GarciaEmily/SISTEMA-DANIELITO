@@ -62,10 +62,15 @@
             <div class="form-group">
                 <label>Grupo</label>
                 <select name="grupo_id" required>
+                    @if(!$nino->grupo_id)
+                        <option value="" selected disabled>
+                            Sin grupo asignado — selecciona uno
+                        </option>
+                    @endif
                     @foreach($grupos as $grupo)
                         <option value="{{ $grupo->id }}"
                             {{ $nino->grupo_id == $grupo->id ? 'selected' : '' }}>
-                            {{ $grupo->nombre }}
+                            {{ $grupo->nombre }}{{ !$grupo->activo ? ' (inactivo)' : '' }}
                         </option>
                     @endforeach
                 </select>

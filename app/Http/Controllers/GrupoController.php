@@ -43,7 +43,7 @@ class GrupoController extends Controller
 
     public function edit(Grupo $grupo)
     {
-        $maestros = $this->obtenerMaestros();
+        $maestros = $this->obtenerMaestros($grupo->maestro_id);
 
         return view('grupos.edit', compact('grupo', 'maestros'));
     }
@@ -52,12 +52,22 @@ class GrupoController extends Controller
     {
         $request->validate($this->reglasValidacion($grupo));
 
+        $estabaActivo = $grupo->activo;
+        $nuevoActivo = $request->boolean('activo');
+
         $grupo->update([
             'nombre' => $request->nombre,
             'descripcion' => $request->descripcion,
             'maestro_id' => $request->filled('maestro_id') ? $request->maestro_id : null,
-            'activo' => $request->boolean('activo'),
+            'activo' => $nuevoActivo,
         ]);
+
+        // Si el grupo pasó de activo a inactivo, sus niños quedan sin grupo
+        // (en vez de arrastrar el estado "desactivado" del grupo hacia ellos)
+        // para forzar una reasignación manual a un grupo activo.
+        if ($estabaActivo && ! $nuevoActivo) {
+            $grupo->ninos()->update(['grupo_id' => null]);
+        }
 
         return redirect()->route('grupos.index')->with('success', 'Grupo actualizado correctamente.');
     }
@@ -107,11 +117,21 @@ class GrupoController extends Controller
         ];
     }
 
-    private function obtenerMaestros()
+    private function obtenerMaestros(?int $incluirMaestroId = null)
     {
         return User::whereHas('role', function ($query) {
             $query->where('nombre', 'Maestro');
         })
+            ->where(function ($query) use ($incluirMaestroId) {
+                $query->where('activo', true);
+
+                // Excepción: si estamos editando y el grupo ya tenía asignado
+                // un maestro que ahora está inactivo, lo mantenemos en la
+                // lista para no perder la asignación actual al guardar.
+                if ($incluirMaestroId) {
+                    $query->orWhere('id', $incluirMaestroId);
+                }
+            })
             ->orderBy('nombre')
             ->orderBy('apellido')
             ->get();

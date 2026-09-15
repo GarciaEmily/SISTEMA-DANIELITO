@@ -53,7 +53,7 @@
                     <option value="">Sin maestro asignado</option>
                     @foreach($maestros as $maestro)
                         <option value="{{ $maestro->id }}" @selected(old('maestro_id', $grupo->maestro_id) == $maestro->id)>
-                            {{ $maestro->nombre }} {{ $maestro->apellido }}
+                            {{ $maestro->nombre }} {{ $maestro->apellido }}{{ !$maestro->activo ? ' (inactivo)' : '' }}
                         </option>
                     @endforeach
                 </select>

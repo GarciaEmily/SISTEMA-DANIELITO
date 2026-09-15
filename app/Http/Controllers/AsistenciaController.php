@@ -2,26 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AsistenciaExport;
 use App\Models\Actividad;
 use App\Models\Asistencia;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
-use App\Exports\AsistenciaExport;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AsistenciaController extends Controller
 {
     public function create(Actividad $actividad)
     {
-        $actividad->load(['ninos', 'grupo']);
+        $actividad->load('grupo');
 
-        return view('asistencia.create', compact('actividad'));
+        // Solo niños activos: uno desactivado no debe poder recibir
+        // asistencia nueva desde el momento en que se desactiva en
+        // adelante. Su historial ya registrado no se toca acá (vive en
+        // AsistenciaController::index() y en los reportes, que no filtran
+        // por activo y no deben empezar a hacerlo).
+        $ninos = $actividad->ninos()->where('activo', true)->get();
+
+        return view('asistencia.create', compact('actividad', 'ninos'));
     }
 
     public function store(Request $request, Actividad $actividad)
     {
         $request->validate([
-            'fecha' => ['required', 'date', 'after_or_equal:' . $actividad->fecha],
+            'fecha' => ['required', 'date', 'after_or_equal:'.$actividad->fecha],
             'asistencias' => ['required', 'array'],
         ]);
 
@@ -68,11 +75,11 @@ class AsistenciaController extends Controller
             try {
                 // Separamos año y mes de forma segura
                 [$anio, $mes] = explode('-', $periodo);
-                
+
                 $inicio = Carbon::createFromDate($anio, $mes, 1)->startOfMonth();
                 $fin = Carbon::createFromDate($anio, $mes, 1)->endOfMonth();
-                
-                $nombreArchivo .= '_' . $mes . '_' . $anio;
+
+                $nombreArchivo .= '_'.$mes.'_'.$anio;
             } catch (\Exception $e) {
                 // Fallback por si acaso ocurre algún error en el formato
                 $inicio = Carbon::now()->startOfMonth();
@@ -83,7 +90,7 @@ class AsistenciaController extends Controller
                 case 'actual':
                     $inicio = Carbon::now()->startOfMonth();
                     $fin = Carbon::now()->endOfMonth();
-                    $nombreArchivo .= '_' . Carbon::now()->format('m_Y');
+                    $nombreArchivo .= '_'.Carbon::now()->format('m_Y');
                     break;
 
                 case 'todo':
@@ -96,16 +103,15 @@ class AsistenciaController extends Controller
                 default:
                     $inicio = Carbon::now()->subMonth()->startOfMonth();
                     $fin = Carbon::now()->subMonth()->endOfMonth();
-                    $nombreArchivo .= '_mes_anterior_' . Carbon::now()->subMonth()->format('m_Y');
+                    $nombreArchivo .= '_mes_anterior_'.Carbon::now()->subMonth()->format('m_Y');
                     break;
             }
         }
 
         // Pasamos el ID de la actividad y los rangos de fechas a la clase de Exportación
         return Excel::download(
-            new AsistenciaExport($actividad->id, $inicio, $fin), 
-            $nombreArchivo . '.xlsx'
+            new AsistenciaExport($actividad->id, $inicio, $fin),
+            $nombreArchivo.'.xlsx'
         );
     }
-
 }

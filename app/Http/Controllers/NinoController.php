@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Grupo;
 use App\Models\Nino;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class NinoController extends Controller
 {
@@ -32,12 +32,18 @@ class NinoController extends Controller
                 return $nino->grupo->nombre ?? 'Sin grupo';
             });
 
-        return view('ninos.index_admin', compact('ninosAgrupados'));
+        // Mapa nombre => id para el botón de "reporte de asistencia por
+        // grupo": se resuelve por el nombre del grupo (la clave del bloque),
+        // no por el grupo de un niño cualquiera de la lista, para que no
+        // dependa de que el primer niño del bloque tenga grupo asignado.
+        $grupoPorNombre = Grupo::pluck('id', 'nombre');
+
+        return view('ninos.index_admin', compact('ninosAgrupados', 'grupoPorNombre'));
     }
 
     public function create()
     {
-        $grupos = Grupo::all();
+        $grupos = Grupo::where('activo', true)->orderBy('nombre')->get();
 
         return view('ninos.create', compact('grupos'));
     }
@@ -57,16 +63,16 @@ class NinoController extends Controller
             'observaciones' => 'nullable|string',
             'nombre_iglesia' => 'nullable|string|max:255',
             'nombre_celula' => 'nullable|string|max:255',
-            'latitud'  => 'nullable|numeric',
+            'latitud' => 'nullable|numeric',
             'longitud' => 'nullable|numeric',
         ]);
 
         $grupo = Grupo::findOrFail($request->grupo_id);
         $maestro = $grupo->maestro;
 
-        if (!$maestro) {
+        if (! $maestro) {
             return back()->withErrors([
-                'grupo_id' => 'El grupo seleccionado no tiene un maestro asignado.'
+                'grupo_id' => 'El grupo seleccionado no tiene un maestro asignado.',
             ])->withInput();
         }
 
@@ -118,7 +124,18 @@ class NinoController extends Controller
 
     public function edit(Nino $nino)
     {
-        $grupos = Grupo::all();
+        // Solo grupos activos, salvo el que el niño ya tiene asignado
+        // (aunque esté inactivo), para no perder esa asignación al editar
+        // otros campos sin querer tocar el grupo.
+        $grupos = Grupo::where(function ($query) use ($nino) {
+            $query->where('activo', true);
+
+            if ($nino->grupo_id) {
+                $query->orWhere('id', $nino->grupo_id);
+            }
+        })
+            ->orderBy('nombre')
+            ->get();
 
         return view('ninos.edit', compact('nino', 'grupos'));
     }
@@ -126,7 +143,7 @@ class NinoController extends Controller
     public function update(Request $request, Nino $nino)
     {
         $request->validate([
-            'codigo' => 'required|string|max:255|unique:ninos,codigo,' . $nino->id,
+            'codigo' => 'required|string|max:255|unique:ninos,codigo,'.$nino->id,
             'grupo_id' => 'required|exists:grupos,id',
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
@@ -138,16 +155,16 @@ class NinoController extends Controller
             'observaciones' => 'nullable|string',
             'nombre_iglesia' => 'nullable|string|max:255',
             'nombre_celula' => 'nullable|string|max:255',
-            'latitud'  => 'nullable|numeric', // Al ser nullable, no romperá si no eligen mapa
+            'latitud' => 'nullable|numeric', // Al ser nullable, no romperá si no eligen mapa
             'longitud' => 'nullable|numeric',
         ]);
 
         $grupo = Grupo::findOrFail($request->grupo_id);
         $maestro = $grupo->maestro;
 
-        if (!$maestro) {
+        if (! $maestro) {
             return back()->withErrors([
-                'grupo_id' => 'El grupo seleccionado no tiene un maestro asignado.'
+                'grupo_id' => 'El grupo seleccionado no tiene un maestro asignado.',
             ])->withInput();
         }
 
@@ -189,5 +206,4 @@ class NinoController extends Controller
 
         return redirect()->route('ninos.index')->with('success', 'Niño eliminado correctamente.');
     }
-
 }

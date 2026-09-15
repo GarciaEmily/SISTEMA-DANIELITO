@@ -60,7 +60,7 @@ class UserController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $usuario->id,
+            'email' => 'required|email|max:255|unique:users,email,'.$usuario->id,
             'password' => 'nullable|string|min:8|confirmed',
             'role_id' => 'required|exists:roles,id',
         ], [
@@ -109,12 +109,12 @@ class UserController extends Controller
             $asociaciones[] = 'visitas realizadas';
         }
 
-        if (!empty($asociaciones)) {
+        if (! empty($asociaciones)) {
             return back()->with(
                 'error',
-                'No se puede eliminar a ' . $usuario->nombre . ' ' . $usuario->apellido
-                    . ' porque tiene ' . implode(', ', $asociaciones) . ' asociados. '
-                    . 'Desactívalo en su lugar desde "Editar" para quitarle el acceso sin perder ese historial.'
+                'No se puede eliminar a '.$usuario->nombre.' '.$usuario->apellido
+                    .' porque tiene '.implode(', ', $asociaciones).' asociados. '
+                    .'Desactívalo en su lugar desde "Editar" para quitarle el acceso sin perder ese historial.'
             );
         }
 

@@ -79,7 +79,7 @@
                     </thead>
 
                     <tbody>
-                        @forelse($actividad->ninos as $nino)
+                        @forelse($ninos as $nino)
 
                             <tr>
                                 <td>
