@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ImportacionNinosController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\GrupoController;
 use App\Models\Nino;
 use App\Models\Grupo;
 use App\Models\Actividad;
@@ -301,6 +302,36 @@ Route::post('/actividades/{actividad}/asistencia', [AsistenciaController::class,
 Route::get('/actividades/{actividad}/asistencias', [AsistenciaController::class, 'index'])
     ->middleware(['auth'])
     ->name('asistencias.index');
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de grupos (Directora y Administrador)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/grupos', [GrupoController::class, 'index'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.index');
+
+Route::get('/grupos/create', [GrupoController::class, 'create'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.create');
+
+Route::post('/grupos', [GrupoController::class, 'store'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.store');
+
+Route::get('/grupos/{grupo}/edit', [GrupoController::class, 'edit'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.edit');
+
+Route::put('/grupos/{grupo}', [GrupoController::class, 'update'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.update');
+
+Route::delete('/grupos/{grupo}', [GrupoController::class, 'destroy'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.destroy');
 
 /*
 |--------------------------------------------------------------------------

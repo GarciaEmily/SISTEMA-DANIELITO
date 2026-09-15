@@ -74,6 +74,12 @@
             ➕ Crear actividad
         </a>
 
+        @if(Route::has('grupos.index'))
+            <a href="{{ route('grupos.index') }}" class="btn btn-secundario">
+                👥 Grupos
+            </a>
+        @endif
+
         @if(Route::has('usuarios.index') && auth()->user()->role->nombre === 'Directora')
             <a href="{{ route('usuarios.index') }}" class="btn btn-secundario">
                 👤 Usuarios
