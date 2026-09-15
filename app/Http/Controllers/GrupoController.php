@@ -34,8 +34,8 @@ class GrupoController extends Controller
         Grupo::create([
             'nombre' => $request->nombre,
             'descripcion' => $request->descripcion,
-            'maestro_id' => $request->maestro_id,
-            'activo' => $request->boolean('activo', true),
+            'maestro_id' => $request->filled('maestro_id') ? $request->maestro_id : null,
+            'activo' => $request->boolean('activo'),
         ]);
 
         return redirect()->route('grupos.index')->with('success', 'Grupo creado correctamente.');
@@ -55,8 +55,8 @@ class GrupoController extends Controller
         $grupo->update([
             'nombre' => $request->nombre,
             'descripcion' => $request->descripcion,
-            'maestro_id' => $request->maestro_id,
-            'activo' => $request->boolean('activo', true),
+            'maestro_id' => $request->filled('maestro_id') ? $request->maestro_id : null,
+            'activo' => $request->boolean('activo'),
         ]);
 
         return redirect()->route('grupos.index')->with('success', 'Grupo actualizado correctamente.');
@@ -71,17 +71,17 @@ class GrupoController extends Controller
             $razones = [];
 
             if ($totalNinos > 0) {
-                $razones[] = $totalNinos . ' niño(s) asignado(s)';
+                $razones[] = $totalNinos.' niño(s) asignado(s)';
             }
             if ($totalActividades > 0) {
-                $razones[] = $totalActividades . ' actividad(es) asociada(s)';
+                $razones[] = $totalActividades.' actividad(es) asociada(s)';
             }
 
             return back()->with(
                 'error',
-                'No se puede eliminar el grupo "' . $grupo->nombre . '" porque tiene '
-                    . implode(' y ', $razones)
-                    . '. Desactívalo en su lugar desde "Editar" para dejar de usarlo sin perder esos registros.'
+                'No se puede eliminar el grupo "'.$grupo->nombre.'" porque tiene '
+                    .implode(' y ', $razones)
+                    .'. Desactívalo en su lugar desde "Editar" para dejar de usarlo sin perder esos registros.'
             );
         }
 

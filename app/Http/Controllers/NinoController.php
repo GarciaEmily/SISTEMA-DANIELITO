@@ -94,7 +94,7 @@ class NinoController extends Controller
             'asiste_iglesia' => $request->boolean('asiste_iglesia'),
             'nombre_iglesia' => $request->nombre_iglesia,
             'nombre_celula' => $request->nombre_celula,
-            'activo' => $request->boolean('activo', true),
+            'activo' => $request->boolean('activo'),
             'latitud' => $request->latitud,
             'longitud' => $request->longitud,
         ]);
@@ -175,7 +175,7 @@ class NinoController extends Controller
             'asiste_iglesia' => $request->boolean('asiste_iglesia'),
             'nombre_iglesia' => $request->nombre_iglesia,
             'nombre_celula' => $request->nombre_celula,
-            'activo' => $request->boolean('activo', true),
+            'activo' => $request->boolean('activo'),
             'latitud' => $request->latitud,
             'longitud' => $request->longitud,
         ]);

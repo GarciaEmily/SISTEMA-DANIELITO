@@ -42,7 +42,7 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role_id' => $request->role_id,
-            'activo' => $request->boolean('activo', true),
+            'activo' => $request->boolean('activo'),
         ]);
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
@@ -73,7 +73,7 @@ class UserController extends Controller
             'apellido' => $request->apellido,
             'email' => $request->email,
             'role_id' => $request->role_id,
-            'activo' => $request->boolean('activo', true),
+            'activo' => $request->boolean('activo'),
         ];
 
         if ($request->filled('password')) {
