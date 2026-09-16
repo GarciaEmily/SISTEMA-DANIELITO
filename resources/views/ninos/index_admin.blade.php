@@ -61,10 +61,14 @@
                 </div>
 
                 {{-- Bloque Derecho: Formulario Selector de Mes + Botón PDF --}}
-                @if($ninos->count() > 0)
+                {{-- Se resuelve el grupo por su nombre (clave de este bloque), no por el
+                     grupo de un niño cualquiera de la lista: el bloque "Sin grupo" no
+                     corresponde a ningún grupo real, así que el botón simplemente no
+                     aparece ahí en vez de romper la página. --}}
+                @if($ninos->count() > 0 && isset($grupoPorNombre[$grupo]))
                     <div class="prevent-collapse-zone" style="margin-right: 15px;">
-                        <form action="{{ route('reportes.asistencia.grupo', $ninos->first()->grupo_id) }}" 
-                              method="GET" 
+                        <form action="{{ route('reportes.asistencia.grupo', $grupoPorNombre[$grupo]) }}"
+                              method="GET"
                               target="_blank" 
                               style="display: flex; align-items: center; gap: 8px; margin: 0;">
                             

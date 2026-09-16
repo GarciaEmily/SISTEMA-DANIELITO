@@ -1,19 +1,20 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\NinoController;
 use App\Http\Controllers\ActividadController;
 use App\Http\Controllers\AsistenciaController;
+use App\Http\Controllers\GrupoController;
+use App\Http\Controllers\ImportacionNinosController;
+use App\Http\Controllers\NinoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReporteController;
-use App\Http\Controllers\ImportacionNinosController;
 use App\Http\Controllers\UserController;
-use App\Models\Nino;
-use App\Models\Grupo;
 use App\Models\Actividad;
 use App\Models\Asistencia;
+use App\Models\Grupo;
+use App\Models\Nino;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -42,10 +43,10 @@ Route::get('/directora', function () {
         SUM(CASE WHEN asistencias.estado = "ausente" THEN 1 ELSE 0 END) as ausentes,
         SUM(CASE WHEN asistencias.estado = "justificado" THEN 1 ELSE 0 END) as justificados
     ')
-    ->join('ninos', 'asistencias.nino_id', '=', 'ninos.id')
-    ->join('grupos', 'ninos.grupo_id', '=', 'grupos.id')
-    ->groupBy('grupos.nombre')
-    ->get();
+        ->join('ninos', 'asistencias.nino_id', '=', 'ninos.id')
+        ->join('grupos', 'ninos.grupo_id', '=', 'grupos.id')
+        ->groupBy('grupos.nombre')
+        ->get();
 
     $ultimasActividades = Actividad::with(['grupo', 'ninos.grupo'])
         ->orderBy('fecha_actividad', 'desc')
@@ -83,7 +84,6 @@ Route::get('/directora', function () {
     ]);
 })->middleware(['auth', 'role:Directora']);
 
-
 Route::get('/admin', function () {
     $presentes = Asistencia::where('estado', 'presente')->count();
     $ausentes = Asistencia::where('estado', 'ausente')->count();
@@ -96,10 +96,10 @@ Route::get('/admin', function () {
         SUM(CASE WHEN asistencias.estado = "ausente" THEN 1 ELSE 0 END) as ausentes,
         SUM(CASE WHEN asistencias.estado = "justificado" THEN 1 ELSE 0 END) as justificados
     ')
-    ->join('ninos', 'asistencias.nino_id', '=', 'ninos.id')
-    ->join('grupos', 'ninos.grupo_id', '=', 'grupos.id')
-    ->groupBy('grupos.nombre')
-    ->get();
+        ->join('ninos', 'asistencias.nino_id', '=', 'ninos.id')
+        ->join('grupos', 'ninos.grupo_id', '=', 'grupos.id')
+        ->groupBy('grupos.nombre')
+        ->get();
 
     $ultimasActividades = Actividad::with(['grupo', 'ninos.grupo'])
         ->orderBy('fecha_actividad', 'desc')
@@ -163,9 +163,9 @@ Route::get('/maestro', function () {
         ->take(5);
 
     $misMasAsistentes = Asistencia::select(
-            'nino_id',
-            DB::raw('COUNT(*) as total_asistencias')
-        )
+        'nino_id',
+        DB::raw('COUNT(*) as total_asistencias')
+    )
         ->where('estado', 'presente')
         ->whereHas('nino', function ($q) use ($user) {
             $q->where('maestro_id', $user->id);
@@ -301,6 +301,36 @@ Route::post('/actividades/{actividad}/asistencia', [AsistenciaController::class,
 Route::get('/actividades/{actividad}/asistencias', [AsistenciaController::class, 'index'])
     ->middleware(['auth'])
     ->name('asistencias.index');
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de grupos (Directora y Administrador)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/grupos', [GrupoController::class, 'index'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.index');
+
+Route::get('/grupos/create', [GrupoController::class, 'create'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.create');
+
+Route::post('/grupos', [GrupoController::class, 'store'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.store');
+
+Route::get('/grupos/{grupo}/edit', [GrupoController::class, 'edit'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.edit');
+
+Route::put('/grupos/{grupo}', [GrupoController::class, 'update'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.update');
+
+Route::delete('/grupos/{grupo}', [GrupoController::class, 'destroy'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('grupos.destroy');
 
 /*
 |--------------------------------------------------------------------------
