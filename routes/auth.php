@@ -12,10 +12,15 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    // Registro público deshabilitado: los usuarios solo se crean desde el
+    // CRUD de usuarios (Directora), no por auto-registro. Se deja
+    // comentado en vez de borrado por si se decide restaurarlo con
+    // alcance distinto (RegisteredUserController sigue existiendo, solo
+    // sin ruta que lo alcance).
+    // Route::get('register', [RegisteredUserController::class, 'create'])
+    //     ->name('register');
+    //
+    // Route::post('register', [RegisteredUserController::class, 'store']);
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
