@@ -207,6 +207,27 @@ class NinoController extends Controller
 
     public function destroy(Nino $nino)
     {
+        $totalAsistencias = $nino->asistencias()->count();
+        $totalVisitas = $nino->visitas()->count();
+
+        if ($totalAsistencias > 0 || $totalVisitas > 0) {
+            $razones = [];
+
+            if ($totalAsistencias > 0) {
+                $razones[] = $totalAsistencias.' registro(s) de asistencia';
+            }
+            if ($totalVisitas > 0) {
+                $razones[] = $totalVisitas.' visita(s) registrada(s)';
+            }
+
+            return back()->with(
+                'error',
+                'No se puede eliminar a '.$nino->nombres.' '.$nino->apellidos
+                    .' porque tiene '.implode(' y ', $razones)
+                    .'. Desactívalo en su lugar desde "Editar" para dejar de asignarlo a nada nuevo sin perder ese historial.'
+            );
+        }
+
         $nino->delete();
 
         return redirect()->route('ninos.index')->with('success', 'Niño eliminado correctamente.');
