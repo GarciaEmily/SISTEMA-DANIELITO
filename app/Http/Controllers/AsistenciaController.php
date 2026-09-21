@@ -27,9 +27,21 @@ class AsistenciaController extends Controller
 
     public function store(Request $request, Actividad $actividad)
     {
+        // La cota inferior solo aplica si la actividad tiene una fecha fija
+        // (tipo "normal"); una "Intervención" es recurrente y no tiene una
+        // fecha única contra la cual comparar (fecha_actividad es nullable).
+        $reglasFecha = ['required', 'date', 'before_or_equal:today'];
+
+        if ($actividad->fecha_actividad) {
+            $reglasFecha[] = 'after_or_equal:'.$actividad->fecha_actividad;
+        }
+
         $request->validate([
-            'fecha' => ['required', 'date', 'after_or_equal:'.$actividad->fecha],
+            'fecha' => $reglasFecha,
             'asistencias' => ['required', 'array'],
+        ], [
+            'fecha.after_or_equal' => 'La fecha de asistencia no puede ser anterior a la fecha de la actividad ('.Carbon::parse($actividad->fecha_actividad)->format('d/m/Y').').',
+            'fecha.before_or_equal' => 'La fecha de asistencia no puede ser una fecha futura.',
         ]);
 
         foreach ($request->asistencias as $ninoId => $datos) {

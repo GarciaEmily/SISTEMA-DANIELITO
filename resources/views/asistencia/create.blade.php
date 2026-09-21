@@ -58,11 +58,16 @@
 
                 <input type="date"
                        name="fecha"
-                       value="{{ $actividad->fecha }}"
-                       min="{{ $actividad->fecha }}"
+                       value="{{ old('fecha', now()->toDateString()) }}"
+                       @if($actividad->fecha_actividad) min="{{ $actividad->fecha_actividad }}" @endif
+                       max="{{ now()->toDateString() }}"
                        required>
                 <small style="color: var(--text-mid); display: block; margin-top: 5px;">
-                    * Solo se permiten fechas iguales o posteriores a la fecha de la actividad.
+                    @if($actividad->fecha_actividad)
+                        * Solo se permiten fechas entre el {{ \Carbon\Carbon::parse($actividad->fecha_actividad)->format('d/m/Y') }} y hoy.
+                    @else
+                        * Solo se permiten fechas hasta hoy (esta es una intervención recurrente, sin fecha única).
+                    @endif
                 </small>
             </div>
 
