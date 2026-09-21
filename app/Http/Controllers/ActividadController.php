@@ -14,11 +14,11 @@ class ActividadController extends Controller
         $user = auth()->user();
 
         if ($user->role->nombre === 'Maestro') {
-            $gruposPermitidos = $this->obtenerGruposDelMaestro($user);
+            $grupoIds = $this->obtenerGruposDelMaestro($user);
 
             $actividades = Actividad::with('grupos')
-                ->whereHas('grupos', function ($query) use ($gruposPermitidos) {
-                    $query->whereIn('nombre', $gruposPermitidos);
+                ->whereHas('grupos', function ($query) use ($grupoIds) {
+                    $query->whereIn('grupos.id', $grupoIds);
                 })
                 ->get();
 
@@ -126,15 +126,7 @@ class ActividadController extends Controller
 
     private function obtenerGruposDelMaestro($user)
     {
-        $nombreCompleto = trim($user->nombre.' '.$user->apellido);
-
-        return match ($nombreCompleto) {
-            'Ivi Condori' => ['6 a 8 años'],
-            'Danna Garcia' => ['9 a 11 años'],
-            'Diego Chore' => ['12 a 14 años'],
-            'Juan Carlos Contreras' => ['15 a 18 años'],
-            default => [],
-        };
+        return $user->gruposComoMaestro()->pluck('id')->toArray();
     }
 
     public function asignarNinos(Actividad $actividad)
