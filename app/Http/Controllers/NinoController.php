@@ -7,6 +7,11 @@ use App\Models\Nino;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
+/**
+ * CRUD de niños: listado agrupado por grupo (con vista separada para
+ * Maestro, que solo ve los suyos), alta/edición con los datos de la
+ * ficha y su grupo/maestro asignado, ficha individual y baja.
+ */
 class NinoController extends Controller
 {
     public function index()
