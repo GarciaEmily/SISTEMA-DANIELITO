@@ -45,6 +45,12 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="error-box">
+            <p class="error-text">❌ {{ session('error') }}</p>
+        </div>
+    @endif
+
     @forelse($ninosAgrupados as $grupo => $ninos)
 
         <details class="group-card" open>
