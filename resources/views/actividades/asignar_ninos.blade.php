@@ -79,8 +79,8 @@
                             <div class="child-info">
                                 <span class="child-name">
                                     {{ $nino->nombres }} {{ $nino->apellidos }}
-                                    @if(!$nino->activo)
-                                        <span class="badge badge-inactive">Inactivo</span>
+                                    @if($nino->trashed())
+                                        <span class="badge badge-inactive">Eliminado</span>
                                     @endif
                                 </span>
 

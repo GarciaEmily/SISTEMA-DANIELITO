@@ -211,11 +211,6 @@
 
     <label>Asiste iglesia</label>
 </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="activo" value="1" checked>
-                <label>Activo</label>
-            </div>
-
         </div>
 
         <button type="submit" class="btn-guardar">

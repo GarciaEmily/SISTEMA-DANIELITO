@@ -228,6 +228,16 @@ Route::delete('/ninos/{nino}', [NinoController::class, 'destroy'])
     ->middleware(['auth', 'admin.directora'])
     ->name('ninos.destroy');
 
+// Debe ir antes de la ruta {nino} de abajo: si no, "/ninos/eliminados"
+// intentaría resolverse como {nino}="eliminados" y daría 404.
+Route::get('/ninos/eliminados', [NinoController::class, 'eliminados'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('ninos.eliminados');
+
+Route::put('/ninos/{id}/restaurar', [NinoController::class, 'restore'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('ninos.restore');
+
 Route::get('/ninos/{nino}', [NinoController::class, 'show'])
     ->middleware(['auth'])
     ->name('ninos.show');

@@ -105,7 +105,6 @@ class NinoController extends Controller
             'asiste_iglesia' => $request->boolean('asiste_iglesia'),
             'nombre_iglesia' => $request->nombre_iglesia,
             'nombre_celula' => $request->nombre_celula,
-            'activo' => $request->boolean('activo'),
             'latitud' => $request->latitud,
             'longitud' => $request->longitud,
         ]);
@@ -197,7 +196,6 @@ class NinoController extends Controller
             'asiste_iglesia' => $request->boolean('asiste_iglesia'),
             'nombre_iglesia' => $request->nombre_iglesia,
             'nombre_celula' => $request->nombre_celula,
-            'activo' => $request->boolean('activo'),
             'latitud' => $request->latitud,
             'longitud' => $request->longitud,
         ]);
@@ -207,29 +205,32 @@ class NinoController extends Controller
 
     public function destroy(Nino $nino)
     {
-        $totalAsistencias = $nino->asistencias()->count();
-        $totalVisitas = $nino->visitas()->count();
-
-        if ($totalAsistencias > 0 || $totalVisitas > 0) {
-            $razones = [];
-
-            if ($totalAsistencias > 0) {
-                $razones[] = $totalAsistencias.' registro(s) de asistencia';
-            }
-            if ($totalVisitas > 0) {
-                $razones[] = $totalVisitas.' visita(s) registrada(s)';
-            }
-
-            return back()->with(
-                'error',
-                'No se puede eliminar a '.$nino->nombres.' '.$nino->apellidos
-                    .' porque tiene '.implode(' y ', $razones)
-                    .'. Desactívalo en su lugar desde "Editar" para dejar de asignarlo a nada nuevo sin perder ese historial.'
-            );
-        }
-
+        // Eliminar ya no bloquea nunca, tenga o no historial: es un soft
+        // delete (Nino usa SoftDeletes), así que no borra la fila ni rompe
+        // las referencias de asistencias/visitas — solo marca deleted_at y
+        // el scope global lo esconde de todas las listas y selectores.
         $nino->delete();
 
         return redirect()->route('ninos.index')->with('success', 'Niño eliminado correctamente.');
+    }
+
+    public function eliminados()
+    {
+        $ninosEliminados = Nino::onlyTrashed()
+            ->with(['maestro', 'grupo'])
+            ->orderBy('apellidos')
+            ->orderBy('nombres')
+            ->get();
+
+        return view('ninos.eliminados', compact('ninosEliminados'));
+    }
+
+    public function restore($id)
+    {
+        $nino = Nino::onlyTrashed()->findOrFail($id);
+        $nino->restore();
+
+        return redirect()->route('ninos.eliminados')
+            ->with('success', $nino->nombres.' '.$nino->apellidos.' fue restaurado correctamente.');
     }
 }

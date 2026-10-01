@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Nino extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'ninos';
 
     protected $fillable = [
@@ -29,9 +32,8 @@ class Nino extends Model
         'asiste_iglesia',
         'nombre_iglesia',
         'nombre_celula',
-        'activo',
         'latitud',  // <-- Agrega esto
-    'longitud', // <-- Agrega esto
+        'longitud', // <-- Agrega esto
     ];
 
     protected $casts = [
@@ -40,7 +42,6 @@ class Nino extends Model
         'fue_al_encuentro' => 'boolean',
         'bautizado' => 'boolean',
         'asiste_iglesia' => 'boolean',
-        'activo' => 'boolean',
     ];
 
     public function maestro(): BelongsTo
@@ -62,10 +63,11 @@ class Nino extends Model
     {
         return $this->hasMany(Visita::class);
     }
+
     public function actividades()
-{
-    return $this->belongsToMany(Actividad::class, 'actividad_nino', 'nino_id', 'actividad_id');
-}
+    {
+        return $this->belongsToMany(Actividad::class, 'actividad_nino', 'nino_id', 'actividad_id');
+    }
 
     public function actividadNinos(): HasMany
     {

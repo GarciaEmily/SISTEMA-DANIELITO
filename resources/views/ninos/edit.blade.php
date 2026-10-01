@@ -202,14 +202,6 @@
                 </div>
             </div>
 
-            <div class="checkbox-group">
-                <input type="checkbox"
-                       name="activo"
-                       value="1"
-                       {{ $nino->activo ? 'checked' : '' }}>
-                <label>Activo</label>
-            </div>
-
         </div>
 
         <input type="hidden" name="latitud" id="latitud" value="{{ old('latitud', $nino->latitud) }}">
