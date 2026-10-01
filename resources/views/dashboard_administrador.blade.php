@@ -43,6 +43,14 @@
             ➕ Crear actividad
         </a>
 
+        <a href="{{ route('visitas.index') }}" class="btn btn-verde">
+            🏠 Visitas domiciliarias
+        </a>
+
+        <a href="{{ route('visitas.create') }}" class="btn btn-naranja">
+            ➕ Registrar visita
+        </a>
+
         @if(Route::has('grupos.index'))
             <a href="{{ route('grupos.index') }}" class="btn btn-secundario">
                 👥 Grupos
