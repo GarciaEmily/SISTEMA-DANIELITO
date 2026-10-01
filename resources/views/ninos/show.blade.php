@@ -146,9 +146,17 @@
         </div>
     </div>
 
-    <div style="margin-top: 20px;">
+    <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
         <a href="{{ route('ninos.index') }}" class="btn-volver" style="text-decoration: none; background-color: #6c757d; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block;">
             ← Volver
+        </a>
+
+        <a href="{{ route('visitas.index', ['nino_id' => $nino->id]) }}" style="text-decoration: none; background-color: #3498db; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block;">
+            📋 Ver visitas
+        </a>
+
+        <a href="{{ route('visitas.create', ['nino_id' => $nino->id]) }}" style="text-decoration: none; background-color: #e67e22; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block;">
+            ➕ Registrar visita
         </a>
     </div>
 </div>

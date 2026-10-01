@@ -14,6 +14,7 @@ class Visita extends Model
         'motivo',
         'observacion',
         'seguimiento',
+        'foto_path',
     ];
 
     protected $casts = [

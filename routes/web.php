@@ -8,6 +8,7 @@ use App\Http\Controllers\NinoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VisitaController;
 use App\Models\Actividad;
 use App\Models\Asistencia;
 use App\Models\Grupo;
@@ -291,6 +292,38 @@ Route::post('/actividades/{actividad}/asistencia', [AsistenciaController::class,
 Route::get('/actividades/{actividad}/asistencias', [AsistenciaController::class, 'index'])
     ->middleware(['auth'])
     ->name('asistencias.index');
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de visitas domiciliarias
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/visitas', [VisitaController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('visitas.index');
+
+Route::get('/visitas/create', [VisitaController::class, 'create'])
+    ->middleware(['auth'])
+    ->name('visitas.create');
+
+Route::post('/visitas', [VisitaController::class, 'store'])
+    ->middleware(['auth'])
+    ->name('visitas.store');
+
+Route::get('/visitas/{visita}/edit', [VisitaController::class, 'edit'])
+    ->middleware(['auth'])
+    ->name('visitas.edit');
+
+Route::put('/visitas/{visita}', [VisitaController::class, 'update'])
+    ->middleware(['auth'])
+    ->name('visitas.update');
+
+// Eliminar visitas es solo para Directora/Administrador: Maestro puede
+// registrar y editar, pero no borrar el historial de visitas.
+Route::delete('/visitas/{visita}', [VisitaController::class, 'destroy'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('visitas.destroy');
 
 /*
 |--------------------------------------------------------------------------

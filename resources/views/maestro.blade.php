@@ -139,6 +139,12 @@
             <a href="{{ route('actividades.index') }}" class="btn btn-actividades">
                 📘 Ver mis actividades
             </a>
+            <a href="{{ route('visitas.index') }}" class="btn btn-actividades">
+                🏠 Ver visitas
+            </a>
+            <a href="{{ route('visitas.create') }}" class="btn btn-ninos">
+                ➕ Registrar visita
+            </a>
         </div>
     </div>
 
