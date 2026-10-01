@@ -32,6 +32,11 @@
         </div>
 
         <div class="card">
+            <h3>🧑‍💼 Usuarios</h3>
+            <p>{{ $totalUsuarios }}</p>
+        </div>
+
+        <div class="card">
             <h3>📘 Actividades</h3>
             <p>{{ $totalActividades }}</p>
         </div>
@@ -63,7 +68,7 @@
     <a href="{{ route('ninos.importar') }}" class="btn btn-outline-success">
         <i class="fas fa-file-excel me-2"></i> Importar desde Excel
     </a>
-    
+
 </div>
 
         <a href="{{ route('actividades.index') }}" class="btn btn-verde">
@@ -80,7 +85,7 @@
             </a>
         @endif
 
-        @if(Route::has('usuarios.index') && auth()->user()->role->nombre === 'Directora')
+        @if(Route::has('usuarios.index'))
             <a href="{{ route('usuarios.index') }}" class="btn btn-secundario">
                 👤 Usuarios
             </a>
@@ -190,142 +195,9 @@
 
     </div>
 
-    <div class="panel">
+    @include('partials.dashboard-vulnerables')
 
-    <details>
-
-        <summary class="summary-vulnerables">
-            ⚠️ Niños en condición vulnerable
-            ({{ $listaVulnerables->count() }})
-        </summary>
-
-        @if($listaVulnerables->count())
-
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Grupo</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                @foreach($listaVulnerables as $nino)
-
-                    <tr>
-
-                        <td>{{ $nino->codigo }}</td>
-
-                        <td>
-                            {{ $nino->nombres }}
-                            {{ $nino->apellidos }}
-                        </td>
-
-                        <td>
-                            {{ $nino->grupo->nombre ?? 'Sin grupo' }}
-                        </td>
-
-                        <td>
-                            <a href="{{ route('ninos.show',$nino->id) }}"
-                               class="btn btn-naranja">
-                                👁 Ver ficha
-                            </a>
-                        </td>
-
-                    </tr>
-
-                @endforeach
-
-                </tbody>
-
-            </table>
-
-        @else
-
-            <div class="success-box">
-                ✅ No existen niños vulnerables registrados.
-            </div>
-
-        @endif
-
-    </details>
-
-</div>
-
-<div class="panel">
-
-    <details>
-
-        <summary class="summary-vulnerables">
-            🎂 Cumpleaños del mes
-            ({{ $cumpleanosCercanos->count() }})
-        </summary>
-
-        @if($cumpleanosCercanos->count())
-
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Grupo</th>
-                        <th>Cumpleaños</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                @foreach($cumpleanosCercanos as $nino)
-
-                    <tr>
-
-                        <td>{{ $nino->codigo }}</td>
-
-                        <td>
-                            {{ $nino->nombres }}
-                            {{ $nino->apellidos }}
-                        </td>
-
-                        <td>
-                            {{ $nino->grupo->nombre ?? 'Sin grupo' }}
-                        </td>
-
-                        <td>
-                            {{ \Carbon\Carbon::parse($nino->fecha_nacimiento)->format('d/m') }}
-                        </td>
-
-                        <td>
-                            <a href="{{ route('ninos.show',$nino->id) }}"
-                               class="btn btn-naranja">
-                                👁 Ver ficha
-                            </a>
-                        </td>
-
-                    </tr>
-
-                @endforeach
-
-                </tbody>
-
-            </table>
-
-        @else
-
-            <div class="success-box">
-                🎉 No hay cumpleaños este mes.
-            </div>
-
-        @endif
-
-    </details>
-
-</div>
+    @include('partials.dashboard-cumpleanos')
 
 </div>
 

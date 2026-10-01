@@ -12,6 +12,7 @@ use App\Models\Actividad;
 use App\Models\Asistencia;
 use App\Models\Grupo;
 use App\Models\Nino;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -32,9 +33,10 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 Route::get('/directora', function () {
+    // Solo $presentes hace falta como intermedio para el % de asistencia;
+    // ausentes/justificados a nivel general nunca se muestran en el
+    // dashboard (sí se ven desglosados por grupo en $asistenciaPorGrupo).
     $presentes = Asistencia::where('estado', 'presente')->count();
-    $ausentes = Asistencia::where('estado', 'ausente')->count();
-    $justificados = Asistencia::where('estado', 'justificado')->count();
     $totalAsistencias = Asistencia::count();
     $asistenciaPorGrupo = Asistencia::selectRaw('
         grupos.nombre as grupo,
@@ -70,14 +72,12 @@ Route::get('/directora', function () {
     return view('directora', [
         'totalNinos' => Nino::count(),
         'totalGrupos' => Grupo::count(),
+        'totalUsuarios' => User::count(),
         'totalActividades' => Actividad::count(),
         'totalAsistencias' => $totalAsistencias,
         'ninosVulnerables' => Nino::where('vulnerable', true)->count(),
         'listaVulnerables' => $listaVulnerables,
         'cumpleanosCercanos' => $cumpleanosCercanos,
-        'presentes' => $presentes,
-        'ausentes' => $ausentes,
-        'justificados' => $justificados,
         'porcentajeAsistencia' => $totalAsistencias > 0 ? round(($presentes / $totalAsistencias) * 100, 1) : 0,
         'ultimasActividades' => $ultimasActividades,
         'asistenciaPorGrupo' => $asistenciaPorGrupo,
@@ -85,27 +85,17 @@ Route::get('/directora', function () {
 })->middleware(['auth', 'role:Directora']);
 
 Route::get('/admin', function () {
-    $presentes = Asistencia::where('estado', 'presente')->count();
-    $ausentes = Asistencia::where('estado', 'ausente')->count();
-    $justificados = Asistencia::where('estado', 'justificado')->count();
-    $totalAsistencias = Asistencia::count();
-    $asistenciaPorGrupo = Asistencia::selectRaw('
-        grupos.nombre as grupo,
-        COUNT(*) as total,
-        SUM(CASE WHEN asistencias.estado = "presente" THEN 1 ELSE 0 END) as presentes,
-        SUM(CASE WHEN asistencias.estado = "ausente" THEN 1 ELSE 0 END) as ausentes,
-        SUM(CASE WHEN asistencias.estado = "justificado" THEN 1 ELSE 0 END) as justificados
-    ')
-        ->join('ninos', 'asistencias.nino_id', '=', 'ninos.id')
-        ->join('grupos', 'ninos.grupo_id', '=', 'grupos.id')
-        ->groupBy('grupos.nombre')
-        ->get();
-
+    // Administrador ve solo lo operativo: sin totales generales ni
+    // estadísticas/porcentajes de asistencia (eso queda exclusivo del
+    // dashboard de Directora), así que ninguna de esas queries hace falta acá.
     $ultimasActividades = Actividad::with(['grupo', 'ninos.grupo'])
         ->orderBy('fecha_actividad', 'desc')
         ->take(5)
         ->get();
-    $listaVulnerables = Nino::where('vulnerable', true)->get();
+
+    $listaVulnerables = Nino::with('grupo')
+        ->where('vulnerable', true)
+        ->get();
 
     $cumpleanosCercanos = Nino::with('grupo')
         ->cumpleanosDelMes()
@@ -116,19 +106,9 @@ Route::get('/admin', function () {
         ->values();
 
     return view('admin', [
-        'totalNinos' => Nino::count(),
-        'totalGrupos' => Grupo::count(),
-        'totalActividades' => Actividad::count(),
-        'totalAsistencias' => $totalAsistencias,
-        'ninosVulnerables' => Nino::where('vulnerable', true)->count(),
         'listaVulnerables' => $listaVulnerables,
         'cumpleanosCercanos' => $cumpleanosCercanos,
-        'presentes' => $presentes,
-        'ausentes' => $ausentes,
-        'justificados' => $justificados,
-        'porcentajeAsistencia' => $totalAsistencias > 0 ? round(($presentes / $totalAsistencias) * 100, 1) : 0,
         'ultimasActividades' => $ultimasActividades,
-        'asistenciaPorGrupo' => $asistenciaPorGrupo,
     ]);
 })->middleware(['auth', 'role:Administrador']);
 
@@ -247,6 +227,16 @@ Route::put('/ninos/{nino}', [NinoController::class, 'update'])
 Route::delete('/ninos/{nino}', [NinoController::class, 'destroy'])
     ->middleware(['auth', 'admin.directora'])
     ->name('ninos.destroy');
+
+// Debe ir antes de la ruta {nino} de abajo: si no, "/ninos/eliminados"
+// intentaría resolverse como {nino}="eliminados" y daría 404.
+Route::get('/ninos/eliminados', [NinoController::class, 'eliminados'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('ninos.eliminados');
+
+Route::put('/ninos/{id}/restaurar', [NinoController::class, 'restore'])
+    ->middleware(['auth', 'admin.directora'])
+    ->name('ninos.restore');
 
 Route::get('/ninos/{nino}', [NinoController::class, 'show'])
     ->middleware(['auth'])

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Actividad;
+use App\Models\Asistencia;
 use App\Models\Grupo;
 use App\Models\Nino;
-use App\Models\Asistencia;
-use App\Models\Actividad; 
-use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class ReporteController extends Controller
 {
@@ -21,16 +21,16 @@ class ReporteController extends Controller
     public function asistenciaMensual(Request $request, $grupoId)
     {
         // 🛠️ AQUÍ ESTÁ EL CAMBIO: Forzamos a que si viene vacío o mal enviado, tome el mes y año real de hoy
-        $mes = is_numeric($request->get('mes')) && $request->get('mes') > 0 
-            ? (int) $request->get('mes') 
+        $mes = is_numeric($request->get('mes')) && $request->get('mes') > 0
+            ? (int) $request->get('mes')
             : now()->month;
 
-        $anio = is_numeric($request->get('anio')) && $request->get('anio') > 0 
-            ? (int) $request->get('anio') 
+        $anio = is_numeric($request->get('anio')) && $request->get('anio') > 0
+            ? (int) $request->get('anio')
             : now()->year;
-        
+
         $fechaFiltro = Carbon::now()->setDate($anio, $mes, 1)->startOfDay();
-        $diasDelMes = $fechaFiltro->daysInMonth; 
+        $diasDelMes = $fechaFiltro->daysInMonth;
 
         $grupo = Grupo::findOrFail($grupoId);
         $ninos = Nino::with('maestro')
@@ -38,6 +38,24 @@ class ReporteController extends Controller
             ->orderBy('apellidos')
             ->orderBy('nombres')
             ->get();
+
+        // No es todo-o-nada por mes: un niño eliminado a mitad de mes debe
+        // seguir apareciendo con su nombre en el reporte de ESE mes si ya
+        // tenía asistencias registradas antes de eliminarse (eliminar no le
+        // toca el grupo_id). No se incluyen eliminados sin asistencia ese
+        // mes, para no ensuciar el reporte con filas vacías en meses donde
+        // ya no tienen nada que mostrar.
+        $ninosEliminadosConAsistenciaEsteMes = Nino::onlyTrashed()
+            ->with('maestro')
+            ->where('grupo_id', $grupoId)
+            ->whereHas('asistencias', function ($query) use ($mes, $anio) {
+                $query->whereMonth('fecha', $mes)->whereYear('fecha', $anio);
+            })
+            ->get();
+
+        $ninos = $ninos->concat($ninosEliminadosConAsistenciaEsteMes)
+            ->sortBy(['apellidos', 'nombres'])
+            ->values();
 
         $ninosIds = $ninos->pluck('id');
         $todasLasAsistencias = Asistencia::whereIn('nino_id', $ninosIds)
@@ -49,7 +67,7 @@ class ReporteController extends Controller
         $matrizAsistencias = [];
         foreach ($ninos as $nino) {
             $asistenciasNino = $todasLasAsistencias->get($nino->id, collect())
-                ->keyBy(fn($item) => Carbon::parse($item->fecha)->day);
+                ->keyBy(fn ($item) => Carbon::parse($item->fecha)->day);
 
             $totalPresentes = $asistenciasNino->where('estado', 'presente')->count();
             $totalClases = $asistenciasNino->count();
@@ -57,7 +75,7 @@ class ReporteController extends Controller
 
             $matrizAsistencias[$nino->id] = [
                 'registro' => $asistenciasNino,
-                'porcentaje' => $porcentaje
+                'porcentaje' => $porcentaje,
             ];
         }
 
@@ -68,12 +86,12 @@ class ReporteController extends Controller
             // 🛠️ Forzamos el nombre del mes en español con ->locale('es')
             'mesNombre' => ucfirst($fechaFiltro->locale('es')->translatedFormat('F')),
             'anio' => $anio,
-            'matriz' => $matrizAsistencias
+            'matriz' => $matrizAsistencias,
         ];
 
         return Pdf::loadView('reportes.asistencia-mensual', $data)
-                 ->setPaper('letter', 'landscape')
-                 ->stream("Asistencia_{$grupo->nombre}_{$mes}_{$anio}.pdf");
+            ->setPaper('letter', 'landscape')
+            ->stream("Asistencia_{$grupo->nombre}_{$mes}_{$anio}.pdf");
     }
 
     /**
@@ -97,8 +115,8 @@ class ReporteController extends Controller
 
         $actividades = Actividad::with(['asistencias.nino.grupo'])
             ->whereBetween('fecha_actividad', [
-                $inicioMes->toDateTimeString(), 
-                $finMes->toDateTimeString()
+                $inicioMes->toDateTimeString(),
+                $finMes->toDateTimeString(),
             ])
             ->orderBy('fecha_actividad', 'asc')
             ->get();
@@ -106,12 +124,12 @@ class ReporteController extends Controller
         $dataPdf = [
             'actividades' => $actividades,
             // 🛠️ CORREGIDO AQUÍ: Añadido ->locale('es')
-            'mesNombre'   => $inicioMes->locale('es')->translatedFormat('F'),
-            'anio'        => $anio
+            'mesNombre' => $inicioMes->locale('es')->translatedFormat('F'),
+            'anio' => $anio,
         ];
 
         $pdf = Pdf::loadView('reportes.actividades', $dataPdf)
-                 ->setPaper('a4', 'landscape'); 
+            ->setPaper('a4', 'landscape');
 
         return $pdf->stream("Reporte_Actividades_{$anio}_{$mes}.pdf");
     }
@@ -158,12 +176,14 @@ class ReporteController extends Controller
             $mesNombre = ucfirst(Carbon::create($anio, $mes, 1)->locale('es')->translatedFormat('F'));
         }
 
-        $query = Asistencia::with(['nino.grupo'])
+        // withTrashed() en 'nino': este reporte es histórico — un niño
+        // eliminado después de haber asistido no debe perder su nombre acá.
+        $query = Asistencia::with(['nino' => fn ($q) => $q->withTrashed()->with('grupo')])
             ->where('actividad_id', $actividad->id);
 
-        if (!$todo) {
+        if (! $todo) {
             $query->whereMonth('fecha', $mes)
-                  ->whereYear('fecha', $anio);
+                ->whereYear('fecha', $anio);
         }
 
         $asistencias = $query->orderBy('fecha', 'asc')->get();
@@ -177,17 +197,17 @@ class ReporteController extends Controller
         $porcentaje = $totalRegistros > 0 ? round(($totalPresentes / $totalRegistros) * 100) : 0;
 
         $dataPdf = [
-            'actividad'      => $actividad,
-            'sesiones'       => $sesiones,
+            'actividad' => $actividad,
+            'sesiones' => $sesiones,
             'totalPresentes' => $totalPresentes,
             'totalRegistros' => $totalRegistros,
-            'porcentaje'     => $porcentaje,
-            'mesNombre'      => $mesNombre,
-            'anio'           => $todo ? null : $anio,
+            'porcentaje' => $porcentaje,
+            'mesNombre' => $mesNombre,
+            'anio' => $todo ? null : $anio,
         ];
 
         $pdf = Pdf::loadView('reportes.asistencia-actividad', $dataPdf)
-                  ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'portrait');
 
         $nombreArchivo = str_replace(' ', '_', strtolower($actividad->nombre));
         $sufijo = $todo ? 'historico' : "{$anio}_{$mes}";

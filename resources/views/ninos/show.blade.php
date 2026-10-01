@@ -109,12 +109,6 @@
                 <span class="{{ $nino->vulnerable ? 'badge-si' : 'badge-no' }}">{{ $nino->vulnerable ? 'Sí' : 'No' }}</span>
             </div>
         </div>
-        <div class="form-group">
-            <label>Activo</label>
-            <div style="margin-top: 8px;">
-                <span class="{{ $nino->activo ? 'badge-si' : 'badge-no' }}">{{ $nino->activo ? 'Activo' : 'Inactivo' }}</span>
-            </div>
-        </div>
         @if($nino->vulnerable)
             <div class="form-group full-width">
                 <label>Motivo vulnerabilidad</label>

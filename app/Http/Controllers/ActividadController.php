@@ -136,15 +136,20 @@ class ActividadController extends Controller
 
         $grupoIds = $actividad->grupos()->pluck('grupos.id')->toArray();
 
-        $ninosAsignados = $actividad->ninos()->pluck('ninos.id')->toArray();
+        // withTrashed(): un niño ya asignado y luego eliminado sigue contando
+        // como "asignado" acá — si no, la excepción de abajo nunca lo
+        // encontraría (el scope global de Nino ya lo habría descartado antes
+        // de llegar al pluck).
+        $ninosAsignados = $actividad->ninos()->withTrashed()->pluck('ninos.id')->toArray();
 
-        // Solo niños activos, salvo los que ya estén asignados a esta actividad
-        // (aunque se hayan desactivado después), para no perder esa asignación
-        // al guardar sin querer tocarla.
-        $ninosAgrupados = Nino::with('grupo')
+        // Solo niños existentes (no eliminados), salvo los que ya estén
+        // asignados a esta actividad (aunque se hayan eliminado después),
+        // para no perder esa asignación al guardar sin querer tocarla.
+        $ninosAgrupados = Nino::withTrashed()
+            ->with('grupo')
             ->whereIn('grupo_id', $grupoIds)
             ->where(function ($query) use ($ninosAsignados) {
-                $query->where('activo', true);
+                $query->whereNull('deleted_at');
 
                 if (! empty($ninosAsignados)) {
                     $query->orWhereIn('id', $ninosAsignados);

@@ -34,6 +34,10 @@
                 <a href="{{ route('ninos.create') }}" class="btn btn-naranja">
                     ➕ Registrar Niño
                 </a>
+
+                <a href="{{ route('ninos.eliminados') }}" class="btn btn-secundario">
+                    🗑 Niños eliminados
+                </a>
             </div>
 
         </div>
@@ -42,6 +46,12 @@
     @if(session('success'))
         <div class="alerts">
             <p>✅ {{ session('success') }}</p>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="error-box">
+            <p class="error-text">❌ {{ session('error') }}</p>
         </div>
     @endif
 
@@ -122,7 +132,7 @@
                                     <div class="acciones">
                                         <a href="{{ route('ninos.show', $nino->id) }}" class="btn-action btn-view">Ver</a>
                                         <a href="{{ route('ninos.edit', $nino->id) }}" class="btn-action btn-edit">Editar</a>
-                                        <form action="{{ route('ninos.destroy', $nino->id) }}" method="POST" class="form-eliminar" onsubmit="return confirm('¿Seguro que deseas eliminar este niño?')">
+                                        <form action="{{ route('ninos.destroy', $nino->id) }}" method="POST" class="form-eliminar" onsubmit="return confirm('¿Eliminar a {{ $nino->nombres }} {{ $nino->apellidos }}? Podrás restaurarlo después desde &quot;Niños eliminados&quot;.')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-action btn-delete">Eliminar</button>

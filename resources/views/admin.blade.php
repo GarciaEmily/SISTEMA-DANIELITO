@@ -1,1 +1,1 @@
-@include('dashboard_admin')
+@include('dashboard_administrador')

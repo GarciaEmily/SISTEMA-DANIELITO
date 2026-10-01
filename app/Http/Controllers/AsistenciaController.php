@@ -15,12 +15,13 @@ class AsistenciaController extends Controller
     {
         $actividad->load('grupo');
 
-        // Solo niños activos: uno desactivado no debe poder recibir
-        // asistencia nueva desde el momento en que se desactiva en
-        // adelante. Su historial ya registrado no se toca acá (vive en
-        // AsistenciaController::index() y en los reportes, que no filtran
-        // por activo y no deben empezar a hacerlo).
-        $ninos = $actividad->ninos()->where('activo', true)->get();
+        // Un niño eliminado no debe poder recibir asistencia nueva desde el
+        // momento en que se elimina en adelante. No hace falta filtrar acá:
+        // Nino usa SoftDeletes, así que el scope global ya excluye
+        // eliminados de esta relación automáticamente. Su historial ya
+        // registrado no se toca (vive en AsistenciaController::index() y en
+        // los reportes, que usan withTrashed() donde corresponde).
+        $ninos = $actividad->ninos()->get();
 
         return view('asistencia.create', compact('actividad', 'ninos'));
     }
@@ -65,7 +66,9 @@ class AsistenciaController extends Controller
 
     public function index(Actividad $actividad)
     {
-        $asistencias = Asistencia::with(['nino', 'usuario'])
+        // withTrashed() en 'nino': es un historial — un niño eliminado
+        // después de haber asistido no debe perder su nombre acá.
+        $asistencias = Asistencia::with(['nino' => fn ($q) => $q->withTrashed(), 'usuario'])
             ->where('actividad_id', $actividad->id)
             ->orderBy('fecha', 'desc')
             ->get();
